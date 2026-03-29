@@ -7,12 +7,9 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ['192.168.1.12'],
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  allowedDevOrigins: process.env.DEV_ORIGIN ? [process.env.DEV_ORIGIN] : ['192.168.1.12'],
   images: {
-    unoptimized: true,
+    formats: ['image/webp'],
   },
 }
 

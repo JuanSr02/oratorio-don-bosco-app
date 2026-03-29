@@ -18,7 +18,9 @@ export async function syncOfflineQueue(db: any) {
   const queue: QueuedOperation[] = JSON.parse(localStorage.getItem('offline_queue') || '[]');
   if (queue.length === 0) return;
 
-  console.log('📡 Internet recuperado! Sincronizando operaciones atrasadas:', queue.length);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('📡 Internet recuperado! Sincronizando operaciones atrasadas:', queue.length);
+  }
   const remaining = [];
 
   for (const op of queue) {
@@ -28,10 +30,15 @@ export async function syncOfflineQueue(db: any) {
       if (op.type === 'SAVE_CHILD') await db.supabaseSaveChild(op.payload);
       if (op.type === 'DELETE_CHILD') await db.supabaseDeleteChild(op.payload);
       if (op.type === 'SAVE_ATTENDANCE') await db.supabaseSaveAttendance(op.payload);
-      console.log('✅ Sincronización exitosa resuelta:', op.type);
-    } catch (e: any) {
-      console.error('❌ Error enviando de fondo:', op, e);
-      if (e?.message === 'Failed to fetch' || !navigator.onLine) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ Sincronización exitosa resuelta:', op.type);
+      }
+    } catch (e: unknown) {
+      const err = e as { message?: string }
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('❌ Error enviando de fondo:', op, e);
+      }
+      if (err?.message === 'Failed to fetch' || !navigator.onLine) {
         remaining.push(op); // Todavía sin red
       }
     }
