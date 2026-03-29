@@ -1,0 +1,21 @@
+{
+  "name": "Oratorio Don Bosco",
+  "short_name": "Oratorio",
+  "description": "Sistema de gestión PWA del Oratorio Salesiano",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
