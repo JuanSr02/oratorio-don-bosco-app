@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { House, Child, AttendanceRecord } from './types'
+import type { House, Child, AttendanceRecord, HouseRow, ChildRow, MedicationRow, RelationshipType } from './types'
 import { queueOfflineOperation, setLocalCache, getLocalCache, updateLocalCacheArray } from './sync'
 
 // ── AUTENTICACIÓN ──────────────────────────────────────────────
@@ -144,13 +144,44 @@ export async function deleteChild(id: string): Promise<void> {
 }
 
 export async function getChildById(id: string): Promise<Child | undefined> {
-  const children = await getChildren()
-  return children.find(c => c.id === id)
+  try {
+    if (typeof window !== 'undefined' && !navigator.onLine) throw new TypeError('Failed to fetch')
+    const { data, error } = await supabase
+      .from('children')
+      .select('*, medications(*)')
+      .eq('id', id)
+      .maybeSingle()
+    if (error) throw error
+    if (!data) return undefined
+    return mapChildFromDB(data)
+  } catch (err: any) {
+    if (err?.message === 'Failed to fetch' || !navigator.onLine) {
+      const cached: Child[] = getLocalCache('children', [])
+      return cached.find(c => c.id === id)
+    }
+    console.error('Error fetching child by id:', err)
+    return undefined
+  }
 }
 
 export async function getChildrenByHouse(houseId: string): Promise<Child[]> {
-  const children = await getChildren()
-  return children.filter(c => c.houseId === houseId)
+  try {
+    if (typeof window !== 'undefined' && !navigator.onLine) throw new TypeError('Failed to fetch')
+    const { data, error } = await supabase
+      .from('children')
+      .select('*, medications(*)')
+      .eq('house_id', houseId)
+      .order('first_name', { ascending: true })
+    if (error) throw error
+    return data.map(mapChildFromDB)
+  } catch (err: any) {
+    if (err?.message === 'Failed to fetch' || !navigator.onLine) {
+      const cached: Child[] = getLocalCache('children', [])
+      return cached.filter(c => c.houseId === houseId)
+    }
+    console.error('Error fetching children by house:', err)
+    return []
+  }
 }
 
 // ── ASISTENCIA ────────────────────────────────────────────────
@@ -176,8 +207,28 @@ export async function getAllAttendanceRecords(): Promise<AttendanceRecord[]> {
 }
 
 export async function getAttendanceByDate(date: string): Promise<AttendanceRecord | undefined> {
-  const all = await getAllAttendanceRecords()
-  return all.find(r => r.date === date)
+  try {
+    if (typeof window !== 'undefined' && !navigator.onLine) throw new TypeError('Failed to fetch')
+    const { data, error } = await supabase
+      .from('attendance_records')
+      .select('*, attendance_children(child_id)')
+      .eq('date', date)
+      .maybeSingle()
+    if (error) throw error
+    if (!data) return undefined
+    return {
+      id: data.id, date: data.date,
+      childrenPresent: (data.attendance_children as any[]).map((ac) => ac.child_id),
+      createdAt: data.created_at,
+    }
+  } catch (err: any) {
+    if (err?.message === 'Failed to fetch' || !navigator.onLine) {
+      const cached: AttendanceRecord[] = getLocalCache('attendance', [])
+      return cached.find(r => r.date === date)
+    }
+    console.error('Error fetching attendance by date:', err)
+    return undefined
+  }
 }
 
 export async function supabaseSaveAttendance(record: AttendanceRecord): Promise<void> {
@@ -206,7 +257,7 @@ export async function saveAttendance(record: AttendanceRecord): Promise<void> {
 
 // ── UTILS ───────────────────────────────────────────────────
 export function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2)
+  return crypto.randomUUID()
 }
 
 export function getNextSaturday(): Date {
@@ -234,7 +285,7 @@ export function hasSpecialNeeds(child: Child): boolean {
 }
 
 // ── MAPPERS ───────────────────────────────────────────────────
-function mapHouseFromDB(row: any): House {
+function mapHouseFromDB(row: HouseRow): House {
   return {
     id: row.id,
     address: { street: row.street, number: row.number, barrio: row.barrio },
@@ -244,18 +295,18 @@ function mapHouseFromDB(row: any): House {
   }
 }
 
-function mapChildFromDB(row: any): Child {
+function mapChildFromDB(row: ChildRow): Child {
   return {
     id: row.id, houseId: row.house_id, firstName: row.first_name, lastName: row.last_name,
     dateOfBirth: row.date_of_birth, gender: row.gender, photo: row.photo || undefined,
     isActive: row.is_active,
     health: {
       isCeliac: row.is_celiac || false, foodAllergies: row.food_allergies || '',
-      medications: (row.medications || []).map((m: any) => ({ name: m.name, dose: m.dose, frequency: m.frequency })),
+      medications: (row.medications || []).map((m: MedicationRow) => ({ name: m.name, dose: m.dose, frequency: m.frequency })),
       otherConditions: row.other_conditions || '',
     },
-    primaryGuardian: { name: row.primary_guardian_name, relationship: row.primary_guardian_rel as any, phone: row.primary_guardian_phone },
-    secondaryGuardian: row.secondary_guardian_name ? { name: row.secondary_guardian_name, relationship: row.secondary_guardian_rel as any, phone: row.secondary_guardian_phone } : undefined,
+    primaryGuardian: { name: row.primary_guardian_name, relationship: row.primary_guardian_rel as RelationshipType, phone: row.primary_guardian_phone },
+    secondaryGuardian: row.secondary_guardian_name ? { name: row.secondary_guardian_name, relationship: row.secondary_guardian_rel as RelationshipType, phone: row.secondary_guardian_phone || '' } : undefined,
     createdAt: row.created_at,
   }
 }

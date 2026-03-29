@@ -71,3 +71,50 @@ export const RELATIONSHIP_OPTIONS: RelationshipType[] = [
   'hermana',
   'otro'
 ]
+
+// ── Tipos de filas de base de datos (Supabase) ─────────────────
+export interface MedicationRow {
+  child_id: string
+  name: string
+  dose: string
+  frequency: string
+}
+
+export interface HouseRow {
+  id: string
+  street: string
+  number: string
+  barrio: string
+  reference: string | null
+  gps_note: string | null
+  created_at: string
+}
+
+export interface ChildRow {
+  id: string
+  house_id: string
+  first_name: string
+  last_name: string
+  date_of_birth: string
+  gender: 'masculino' | 'femenino' | 'otro'
+  photo: string | null
+  is_active: boolean
+  is_celiac: boolean
+  food_allergies: string | null
+  other_conditions: string | null
+  primary_guardian_name: string
+  primary_guardian_rel: string
+  primary_guardian_phone: string
+  secondary_guardian_name: string | null
+  secondary_guardian_rel: string | null
+  secondary_guardian_phone: string | null
+  created_at: string
+  medications: MedicationRow[]
+}
+
+export interface AttendanceRecordRow {
+  id: string
+  date: string
+  created_at: string
+  attendance_children: { child_id: string }[]
+}
