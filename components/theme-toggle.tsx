@@ -18,7 +18,7 @@ export function ThemeToggle() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-11 w-11 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30"
+        className="h-11 w-11 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         disabled
       >
         <Sun className="w-5 h-5" />
@@ -33,7 +33,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="h-11 w-11 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30"
+      className="h-11 w-11 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
       aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
     >
       {isDark ? (

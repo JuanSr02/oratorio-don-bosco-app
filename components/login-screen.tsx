@@ -1,109 +1,155 @@
 'use client'
 
 import { useState } from 'react'
-import { Heart, User, Lock, Eye, EyeOff } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Heart, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { login } from '@/lib/db'
+import { loginSchema, type LoginFormData } from '@/lib/schemas'
 
 interface LoginScreenProps {
   onLogin: () => void
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [serverError, setServerError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+  })
 
-    // Autenticar con Supabase
-    const { error: loginError } = await login(username, password)
-    
-    if (!loginError) {
+  const onSubmit = async (data: LoginFormData) => {
+    setServerError('')
+    const { error } = await login(data.email, data.password)
+    if (!error) {
       onLogin()
     } else {
-      setError('Email o contraseña incorrectos')
+      setServerError('Email o contraseña incorrectos. Verificá tus datos.')
     }
-    setIsLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 via-background to-accent/10 flex flex-col items-center justify-center p-4 pt-safe-top pb-safe-bottom">
-      <div className="w-full max-w-sm">
-        {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 mb-4">
-            <Heart className="w-10 h-10 text-primary" fill="currentColor" />
+    <div className="login-bg min-h-screen flex flex-col items-center justify-center p-4 pt-safe-top pb-safe-bottom">
+      {/* Decorative blobs */}
+      <div className="blob blob-1" aria-hidden="true" />
+      <div className="blob blob-2" aria-hidden="true" />
+
+      <div className="w-full max-w-sm relative z-10">
+        {/* Logo */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-primary shadow-lg shadow-primary/40 mb-5 rotate-3 hover:rotate-0 transition-transform duration-300">
+            <Heart className="w-12 h-12 text-primary-foreground" fill="currentColor" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Oratorio Don Bosco</h1>
-          <p className="text-muted-foreground mt-2">Sistema de Gestión</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
+            Oratorio Don Bosco
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">Sistema de Gestión · Salesianos</p>
         </div>
 
-        {/* Login Card */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <h2 className="text-lg font-semibold text-center text-foreground">Iniciar Sesión</h2>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Card */}
+        <div className="glass-card rounded-3xl p-7 shadow-2xl space-y-5">
+          <h2 className="text-lg font-semibold text-foreground text-center">Iniciar sesión</h2>
+
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="text-sm font-medium text-foreground/80">
+                Email
+              </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground" />
                 <Input
+                  id="email"
                   type="email"
-                  placeholder="Email"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10 h-12 text-base"
+                  placeholder="tu@email.com"
                   autoComplete="email"
-                  required
+                  {...register('email')}
+                  className={`pl-10 h-12 text-base transition-all ${
+                    errors.email
+                      ? 'border-destructive focus-visible:ring-destructive/30'
+                      : 'focus-visible:ring-primary/30'
+                  }`}
                 />
               </div>
+              {errors.email && (
+                <p className="flex items-center gap-1 text-xs text-destructive mt-1">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
 
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="text-sm font-medium text-foreground/80">
+                Contraseña
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground" />
                 <Input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 h-12 text-base"
+                  placeholder="••••••••"
                   autoComplete="current-password"
-                  required
+                  {...register('password')}
+                  className={`pl-10 pr-10 h-12 text-base transition-all ${
+                    errors.password
+                      ? 'border-destructive focus-visible:ring-destructive/30'
+                      : 'focus-visible:ring-primary/30'
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                 </button>
               </div>
-
-              {error && (
-                <p className="text-sm text-destructive text-center">{error}</p>
+              {errors.password && (
+                <p className="flex items-center gap-1 text-xs text-destructive mt-1">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  {errors.password.message}
+                </p>
               )}
+            </div>
 
-              <Button
-                type="submit"
-                className="w-full h-12 text-base font-semibold"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Ingresando...' : 'Ingresar'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            {/* Server error */}
+            {serverError && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                <p className="text-sm text-destructive">{serverError}</p>
+              </div>
+            )}
 
-        {/* Footer */}
+            <Button
+              type="submit"
+              className="w-full h-12 text-base font-semibold rounded-xl shadow-md shadow-primary/30 hover:shadow-primary/50 transition-all"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="loader-spin w-4 h-4 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
+                  Ingresando...
+                </span>
+              ) : (
+                'Ingresar'
+              )}
+            </Button>
+          </form>
+        </div>
+
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Salesianos de Don Bosco
+          Salesianos de Don Bosco · {new Date().getFullYear()}
         </p>
       </div>
     </div>
