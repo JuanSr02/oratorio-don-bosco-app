@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Heart, Home, Users, AlertTriangle, Calendar, ArrowRight, Sparkles
+  Home, Users, AlertTriangle, Calendar, ArrowRight, Sparkles
 } from 'lucide-react'
+import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { getHouses, getChildren, hasSpecialNeeds, getNextSaturday, getAttendanceByDate } from '@/lib/db'
 import { useDataStore } from '@/lib/store'
@@ -99,8 +100,15 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         />
         <div className="relative pt-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center shadow-inner">
-              <Heart className="w-6 h-6" fill="currentColor" />
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-primary-foreground/20 backdrop-blur-sm shadow-inner flex-shrink-0">
+              <Image
+                src="/icon-512x512.png"
+                alt="Don Bosco"
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight">Oratorio Don Bosco</h1>
