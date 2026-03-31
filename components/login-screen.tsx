@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Heart, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import Image from 'next/image'
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { login } from '@/lib/db'
@@ -45,8 +46,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-primary shadow-lg shadow-primary/40 mb-5 rotate-3 hover:rotate-0 transition-transform duration-300">
-            <Heart className="w-12 h-12 text-primary-foreground" fill="currentColor" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden shadow-lg shadow-primary/40 mb-5 rotate-3 hover:rotate-0 transition-transform duration-300">
+            <Image
+              src="/icon-512x512.png"
+              alt="Don Bosco"
+              width={96}
+              height={96}
+              className="w-full h-full object-cover"
+              priority
+            />
           </div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">
             Oratorio Don Bosco
@@ -150,6 +158,9 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
         <p className="text-center text-xs text-muted-foreground mt-6">
           Salesianos de Don Bosco · {new Date().getFullYear()}
+        </p>
+        <p className="text-center text-[10px] text-muted-foreground/50 mt-1">
+          Desarrollado por Juan Manuel Sanchez
         </p>
       </div>
     </div>
